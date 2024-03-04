@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdbool.h>
 #include "raylib.h"
 
 #define FPS 60
@@ -12,19 +13,18 @@ int gol[GOL_SIZE][GOL_SIZE] = {
   {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
   {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
   {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+  {0, 0, 0, 1, 0, 0, 0, 0, 0, 0},
+  {0, 0, 0, 0, 1, 0, 0, 0, 0, 0},
+  {0, 0, 1, 1, 1, 0, 0, 0, 0, 0},
   {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-  {0, 0, 0, 1, 1, 0, 0, 0, 0, 0},
-  {0, 0, 0, 0, 1, 1, 0, 0, 0, 0},
-  {0, 0, 0, 0, 0, 1, 0, 0, 0, 0},
   {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
   {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
   {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 };
 
 void render() {
-  for(int i = 0; i < ARRAY_LEN(gol); i++) {
-    const int len = ARRAY_LEN(gol[i]);
-    for(int j = 0; j < len; j++) {
+  for(size_t i = 0; i < GOL_SIZE; i++) {
+    for(size_t j = 0; j < GOL_SIZE; j++) {
       const int state = gol[i][j];
       Color c = RED;
       if (state == 0) {
@@ -32,9 +32,49 @@ void render() {
       } else {
 	c = WHITE;
       }
-      const int x = i * CELL_SIZE;
-      const int y = j * CELL_SIZE;
-      DrawRectangle(x, y, CELL_SIZE, CELL_SIZE, c);
+      const int x = j * CELL_SIZE;
+      const int y = i * CELL_SIZE;
+      DrawRectangle(y, x, CELL_SIZE, CELL_SIZE, c);
+    }
+  }
+}
+
+void update_state() {
+  for(size_t i = 0; i < GOL_SIZE; i++) {
+    for(size_t j = 0; j < GOL_SIZE; j++) {
+
+      size_t number_of_live_neightbours = 0;
+      for(int ki = -1; ki < 2; ki++) {
+	for(int kj = -1; kj < 2; kj++) {
+	  if (ki == 0 && kj == 0) continue;
+	  if (ki + i < 0 || kj + j < 0) continue;
+	  if (ki + i >= GOL_SIZE || kj + j >= GOL_SIZE) continue;
+	  
+	  if (gol[i + ki][j + kj] == 1) {
+	    number_of_live_neightbours += 1;
+	  }
+	}
+      }
+      bool is_alive = gol[i][j] == 1;
+      if (is_alive) {
+	printf("is alive! %d \n", number_of_live_neightbours);
+	if (number_of_live_neightbours < 2) {
+	  gol[i][j] = 0;
+	  // printf("died 1!\n");
+	} else if (number_of_live_neightbours == 2 || number_of_live_neightbours == 3) {
+	  // printf("keep!\n");
+	  gol[i][j] = 1;
+	} else if (number_of_live_neightbours > 3) {
+	  // printf("died 2!\n");
+	  gol[i][j] = 0;
+	}
+      } else {
+	// printf("is dead! %d \n", number_of_live_neightbours);
+	if (number_of_live_neightbours == 3) {
+	  // printf("pop!\n");
+	  gol[i][j] = 1;
+	}
+      }
     }
   }
 }
@@ -43,11 +83,17 @@ int main(void) {
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(WIDTH, HEIGHT, "Game of Life");
     SetWindowMinSize(WIDTH, HEIGHT);
-    SetTargetFPS(FPS);
+    SetTargetFPS(60);
+    int ticks = 0;
     
     while (!WindowShouldClose()) { 
       BeginDrawing();
       ClearBackground(BLACK);
+      ticks += 1;
+      if (ticks == 60) {
+	update_state();
+	ticks = 0;
+      }
       render();
       EndDrawing();
     }
