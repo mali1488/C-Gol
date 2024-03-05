@@ -7,6 +7,8 @@
 
 #define FPS 60
 #define CELL_SIZE 10
+#define ALIVE 1
+#define DEAD 0
 
 void render(int *state, size_t height, size_t width) {
   const size_t CELL_HEIGHT = CELL_SIZE;
@@ -14,7 +16,7 @@ void render(int *state, size_t height, size_t width) {
   for(size_t y = 0; y < height; y++) {
     for(size_t x = 0; x < width; x++) {
       const size_t index = y * height  + x;
-      const int is_alive = state[index] == 1;
+      const int is_alive = state[index] == ALIVE;
       Color c = RED;
       if (is_alive) {
 	c = WHITE;
@@ -44,26 +46,26 @@ void update_state(int *current, int *next, size_t width, size_t height) {
 	  if (ky + y > height || kx + x > width) continue;
 
 	  const int index = (y + ky) * height + x + kx;
-	  if (current[index] == 1) {
+	  if (current[index] == ALIVE) {
 	    n_alive++;
 	  }
 	}
       }
       const int index = y * height + x;
-      bool is_alive = current[index] == 1;
+      bool is_alive = current[index] == ALIVE;
       if (is_alive) {
 	if (n_alive < 2) {
-	  next[index] = 0;
+	  next[index] = DEAD;
 	} else if (n_alive <= 3) {
-	  next[index] = 1;
+	  next[index] = ALIVE;
 	} else {
-	  next[index] = 0;
+	  next[index] = DEAD;
 	}
       } else {
 	if (n_alive == 3) {
-	  next[index] = 1;
+	  next[index] = ALIVE;
 	} else {
-	  next[index] = 0;
+	  next[index] = DEAD;
 	}
       }
     }
