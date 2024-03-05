@@ -9,7 +9,7 @@
 #define WIDTH 600
 #define HEIGHT 600
 
-void render(int* state, size_t height, size_t width) {
+void render(int *state, size_t height, size_t width) {
   const size_t CELL_HEIGHT = HEIGHT / height;
   const size_t CELL_WIDTH = WIDTH / width;
   for(size_t y = 0; y < height; y++) {
@@ -33,7 +33,7 @@ void render(int* state, size_t height, size_t width) {
   }
 }
 
-void update_state(int* current, int* next, size_t width, size_t height) {
+void update_state(int *current, int *next, size_t width, size_t height) {
   for(size_t y = 0; y < height; y++) {
     for(size_t x = 0; x < width; x++) {
 
@@ -73,7 +73,7 @@ void update_state(int* current, int* next, size_t width, size_t height) {
   memset(next, 0, sizeof(int) * height * width);
 }
 
-void print_state(int* state, size_t height, size_t width) {
+void print_state(int *state, size_t height, size_t width) {
   printf("--- \n");
   for(size_t y = 0; y < height; y++) {
     for(size_t x = 0; x < width; x++) {
@@ -85,7 +85,7 @@ void print_state(int* state, size_t height, size_t width) {
   printf("---\n");
 }
 
-void randomize(int* state, size_t height, size_t width) {
+void randomize(int *state, size_t height, size_t width) {
   srand(time(NULL));
   for(size_t y = 0; y < height; y++) {
     for(size_t x = 0; x < width; x++) {
@@ -95,16 +95,28 @@ void randomize(int* state, size_t height, size_t width) {
   }
 }
 
-int main(void) {
+
+char *shift_args(int *argc, char ***argv)
+{
+    char *result = **argv;
+    (*argv) += 1;
+    (*argc) -= 1;
+    return result;
+}
+
+int main(int argc, char** argv) {
     SetConfigFlags(FLAG_WINDOW_RESIZABLE);
     InitWindow(WIDTH, HEIGHT, "Game of Life");
     SetWindowMinSize(WIDTH, HEIGHT);
     SetTargetFPS(60);
+    const char* program = shift_args(&argc, &argv);
+    
+
     size_t height = 25;
     size_t width = 25;
 
-    int* gol = (int*)malloc(sizeof(int)*width*height);
-    int* next = (int*)malloc(sizeof(int)*width*height);
+    int *gol = (int*)malloc(sizeof(int)*width*height);
+    int *next = (int*)malloc(sizeof(int)*width*height);
 
     memset(gol, 0, sizeof(int)*width*height);
     randomize(gol, height, width);
