@@ -1,103 +1,98 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <time.h>
 #include "raylib.h"
 
 #define FPS 60
-#define WIDTH 400
-#define HEIGHT 400
-#define GOL_SIZE 5
-#define CELL_SIZE WIDTH / GOL_SIZE
+#define WIDTH 600
+#define HEIGHT 600
 
-int gol[GOL_SIZE][GOL_SIZE] = {
-  {0, 1, 0, 0, 0 },
-  {0, 0, 1, 0, 0 },
-  {1, 1, 1, 0, 0 },
-  {0, 0, 0, 0, 0 },
-  {0, 0, 0, 0, 0 },
-};
-int gol_next[GOL_SIZE][GOL_SIZE] = {
-  {0, 0, 0, 0, 0 },
-  {0, 0, 0, 0, 0 },
-  {0, 0, 0, 0, 0 },
-  {0, 0, 0, 0, 0 },
-  {0, 0, 0, 0, 0 },
-};
-
-void render() {
-  for(size_t y = 0; y < GOL_SIZE; y++) {
-    for(size_t x = 0; x < GOL_SIZE; x++) {
-      const int state = gol[y][x];
+void render(int* state, size_t height, size_t width) {
+  const size_t CELL_HEIGHT = HEIGHT / height;
+  const size_t CELL_WIDTH = WIDTH / width;
+  for(size_t y = 0; y < height; y++) {
+    for(size_t x = 0; x < width; x++) {
+      const size_t index = y * height  + x;
+      const int is_alive = state[index] == 1;
       Color c = RED;
-      if (state == 0) {
-	c = BLACK;
-      } else {
+      if (is_alive) {
 	c = WHITE;
+      } else {
+	c = BLACK;
       }
       DrawRectangle(
-	  x * CELL_SIZE,
-	  y * CELL_SIZE,
-	  CELL_SIZE,
-	  CELL_SIZE,
+	  x * CELL_WIDTH,
+	  y * CELL_HEIGHT,
+	  CELL_WIDTH,
+	  CELL_HEIGHT,
 	  c
       );
     }
   }
 }
 
-void update_state(
-     int current[GOL_SIZE][GOL_SIZE],
-     int next[GOL_SIZE][GOL_SIZE]
-) {
-  for(size_t y = 0; y < GOL_SIZE; y++) {
-    for(size_t x = 0; x < GOL_SIZE; x++) {
+void update_state(int* current, int* next, size_t width, size_t height) {
+  for(size_t y = 0; y < height; y++) {
+    for(size_t x = 0; x < width; x++) {
 
       size_t n_alive = 0;
       for(int ky = -1; ky <= 1; ky++) {
 	for(int kx = -1; kx <= 1; kx++) {
 	  if (kx == 0 && ky == 0) continue;
 	  if (ky + y < 0 || kx + x < 0) continue;
-	  if (ky + y > GOL_SIZE || kx + x > GOL_SIZE) continue;
+	  if (ky + y > height || kx + x > width) continue;
 
-	  if (current[y + ky][x + kx] == 1) {
+	  const int index = (y + ky) * height + x + kx;
+	  if (current[index] == 1) {
 	    n_alive++;
 	  }
 	}
       }
-      bool is_alive = current[y][x] == 1;
+      const int index = y * height + x;
+      bool is_alive = current[index] == 1;
       if (is_alive) {
 	if (n_alive < 2) {
-	  next[y][x] = 0;
+	  next[index] = 0;
 	} else if (n_alive <= 3) {
-	  next[y][x] = 1;
+	  next[index] = 1;
 	} else {
-	  next[y][x] = 0;
+	  next[index] = 0;
 	}
       } else {
 	if (n_alive == 3) {
-	  next[y][x] = 1;
+	  next[index] = 1;
 	} else {
-	  next[y][x] = 0;
+	  next[index] = 0;
 	}
       }
     }
   }
+  memcpy(current, next, sizeof(next[0])*height*width);
+  memset(next, 0, sizeof(int) * height * width);
 }
 
-void print_state(int state[GOL_SIZE][GOL_SIZE]) {
-  printf("STATE \n");
-  for(size_t y = 0; y < GOL_SIZE; y++) {
-    for(size_t x = 0; x < GOL_SIZE; x++) {
-      printf("%zu, ", state[y][x]);
-      
+void print_state(int* state, size_t height, size_t width) {
+  printf("--- \n");
+  for(size_t y = 0; y < height; y++) {
+    for(size_t x = 0; x < width; x++) {
+      int index = y * height + x;
+      printf("%d:%d, ", state[index], index);
     }
     printf("\n");
   }
-  printf("-----\n");
+  printf("---\n");
 }
 
-void clear(int state[GOL_SIZE][GOL_SIZE]) {
-  memset(state, 0, sizeof(int) * GOL_SIZE* GOL_SIZE);
+void randomize(int* state, size_t height, size_t width) {
+  srand(time(NULL));
+  for(size_t y = 0; y < height; y++) {
+    for(size_t x = 0; x < width; x++) {
+      int index = y * height + x;
+      state[index] = rand() % 2;
+    }
+  }
 }
 
 int main(void) {
@@ -105,6 +100,15 @@ int main(void) {
     InitWindow(WIDTH, HEIGHT, "Game of Life");
     SetWindowMinSize(WIDTH, HEIGHT);
     SetTargetFPS(60);
+    size_t height = 25;
+    size_t width = 25;
+
+    int* gol = (int*)malloc(sizeof(int)*width*height);
+    int* next = (int*)malloc(sizeof(int)*width*height);
+
+    memset(gol, 0, sizeof(int)*width*height);
+    randomize(gol, height, width);
+
     int ticks = 0;
     
     while (!WindowShouldClose()) { 
@@ -112,17 +116,11 @@ int main(void) {
       ClearBackground(BLACK);
       ticks += 1;
       if (ticks == 60) {
-	print_state(gol);
-	update_state(gol, gol_next);
-	memcpy(gol, gol_next, sizeof(gol_next[0][0]) * GOL_SIZE * GOL_SIZE);
-
-	clear(gol_next);
-	print_state(gol_next);
-	puts("TICK OK");
-
+	// print_state(gol, height, width);
+	update_state(gol, next, height, width);
 	ticks = 0;
       }
-      render();
+      render(gol, height, width);
       EndDrawing();
     }
     CloseWindow();
