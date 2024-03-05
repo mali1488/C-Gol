@@ -7,5 +7,5 @@ $ ./build.sh
 ```
 To run the application.
 ```bash
-$ ./build/gol
+$ ./build/gol 20 20
 ```
