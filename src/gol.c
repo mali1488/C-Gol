@@ -105,20 +105,20 @@ void print_usage() {
   printf("Usage: .gor <rows> <cols>\n");
 }
 
-int main(int argc, char** argv) {
+int main(int argc, char **argv) {
     shift_args(&argc, &argv);
     if (argc == 0) {
       print_usage();
       return 0;
     }
 
-    const char* height_str = shift_args(&argc, &argv);
+    const char *height_str = shift_args(&argc, &argv);
     const size_t height = atoi(height_str);
     if (argc == 0) {
       print_usage();
       return 0;
     }
-    const char* width_str = shift_args(&argc, &argv);
+    const char *width_str = shift_args(&argc, &argv);
     const int width = atoi(width_str);
     
     int *gol = (int*)malloc(sizeof(int)*width*height);
@@ -130,7 +130,6 @@ int main(int argc, char** argv) {
 
     InitWindow(width*CELL_SIZE, height*CELL_SIZE, "Game of Life");
     SetTargetFPS(60);
-
 
     while (!WindowShouldClose()) { 
       BeginDrawing();
