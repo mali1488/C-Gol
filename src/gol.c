@@ -145,5 +145,8 @@ int main(int argc, char **argv) {
       EndDrawing();
     }
     CloseWindow();
+
+    free(gol);
+    free(next);
     return 0;
 }
