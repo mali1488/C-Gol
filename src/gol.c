@@ -6,12 +6,11 @@
 #include "raylib.h"
 
 #define FPS 60
-#define WIDTH 600
-#define HEIGHT 600
+#define CELL_SIZE 10
 
 void render(int *state, size_t height, size_t width) {
-  const size_t CELL_HEIGHT = HEIGHT / height;
-  const size_t CELL_WIDTH = WIDTH / width;
+  const size_t CELL_HEIGHT = CELL_SIZE;
+  const size_t CELL_WIDTH = CELL_SIZE;
   for(size_t y = 0; y < height; y++) {
     for(size_t x = 0; x < width; x++) {
       const size_t index = y * height  + x;
@@ -95,40 +94,49 @@ void randomize(int *state, size_t height, size_t width) {
   }
 }
 
-
-char *shift_args(int *argc, char ***argv)
-{
+char *shift_args(int *argc, char ***argv) {
     char *result = **argv;
     (*argv) += 1;
     (*argc) -= 1;
     return result;
 }
 
+void print_usage() {
+  printf("Usage: .gor <rows> <cols>\n");
+}
+
 int main(int argc, char** argv) {
-    SetConfigFlags(FLAG_WINDOW_RESIZABLE);
-    InitWindow(WIDTH, HEIGHT, "Game of Life");
-    SetWindowMinSize(WIDTH, HEIGHT);
-    SetTargetFPS(60);
-    const char* program = shift_args(&argc, &argv);
+    shift_args(&argc, &argv);
+    if (argc == 0) {
+      print_usage();
+      return 0;
+    }
+
+    const char* height_str = shift_args(&argc, &argv);
+    const size_t height = atoi(height_str);
+    if (argc == 0) {
+      print_usage();
+      return 0;
+    }
+    const char* width_str = shift_args(&argc, &argv);
+    const int width = atoi(width_str);
     
-
-    size_t height = 25;
-    size_t width = 25;
-
     int *gol = (int*)malloc(sizeof(int)*width*height);
     int *next = (int*)malloc(sizeof(int)*width*height);
+    int ticks = 0;
 
     memset(gol, 0, sizeof(int)*width*height);
     randomize(gol, height, width);
 
-    int ticks = 0;
-    
+    InitWindow(width*CELL_SIZE, height*CELL_SIZE, "Game of Life");
+    SetTargetFPS(60);
+
+
     while (!WindowShouldClose()) { 
       BeginDrawing();
       ClearBackground(BLACK);
       ticks += 1;
-      if (ticks == 60) {
-	// print_state(gol, height, width);
+      if (ticks == 2) {
 	update_state(gol, next, height, width);
 	ticks = 0;
       }
