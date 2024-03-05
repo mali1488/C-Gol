@@ -1,82 +1,103 @@
 #include <stdio.h>
+#include <string.h>
 #include <stdbool.h>
 #include "raylib.h"
 
 #define FPS 60
 #define WIDTH 400
 #define HEIGHT 400
-#define GOL_SIZE 10
+#define GOL_SIZE 5
 #define CELL_SIZE WIDTH / GOL_SIZE
-#define ARRAY_LEN(array) (sizeof(array)/sizeof(array[0]))
 
 int gol[GOL_SIZE][GOL_SIZE] = {
-  {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-  {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-  {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-  {0, 0, 0, 1, 0, 0, 0, 0, 0, 0},
-  {0, 0, 0, 0, 1, 0, 0, 0, 0, 0},
-  {0, 0, 1, 1, 1, 0, 0, 0, 0, 0},
-  {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-  {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-  {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-  {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+  {0, 1, 0, 0, 0 },
+  {0, 0, 1, 0, 0 },
+  {1, 1, 1, 0, 0 },
+  {0, 0, 0, 0, 0 },
+  {0, 0, 0, 0, 0 },
+};
+int gol_next[GOL_SIZE][GOL_SIZE] = {
+  {0, 0, 0, 0, 0 },
+  {0, 0, 0, 0, 0 },
+  {0, 0, 0, 0, 0 },
+  {0, 0, 0, 0, 0 },
+  {0, 0, 0, 0, 0 },
 };
 
 void render() {
-  for(size_t i = 0; i < GOL_SIZE; i++) {
-    for(size_t j = 0; j < GOL_SIZE; j++) {
-      const int state = gol[i][j];
+  for(size_t y = 0; y < GOL_SIZE; y++) {
+    for(size_t x = 0; x < GOL_SIZE; x++) {
+      const int state = gol[y][x];
       Color c = RED;
       if (state == 0) {
 	c = BLACK;
       } else {
 	c = WHITE;
       }
-      const int x = j * CELL_SIZE;
-      const int y = i * CELL_SIZE;
-      DrawRectangle(y, x, CELL_SIZE, CELL_SIZE, c);
+      DrawRectangle(
+	  x * CELL_SIZE,
+	  y * CELL_SIZE,
+	  CELL_SIZE,
+	  CELL_SIZE,
+	  c
+      );
     }
   }
 }
 
-void update_state() {
-  for(size_t i = 0; i < GOL_SIZE; i++) {
-    for(size_t j = 0; j < GOL_SIZE; j++) {
+void update_state(
+     int current[GOL_SIZE][GOL_SIZE],
+     int next[GOL_SIZE][GOL_SIZE]
+) {
+  for(size_t y = 0; y < GOL_SIZE; y++) {
+    for(size_t x = 0; x < GOL_SIZE; x++) {
 
-      size_t number_of_live_neightbours = 0;
-      for(int ki = -1; ki < 2; ki++) {
-	for(int kj = -1; kj < 2; kj++) {
-	  if (ki == 0 && kj == 0) continue;
-	  if (ki + i < 0 || kj + j < 0) continue;
-	  if (ki + i >= GOL_SIZE || kj + j >= GOL_SIZE) continue;
-	  
-	  if (gol[i + ki][j + kj] == 1) {
-	    number_of_live_neightbours += 1;
+      size_t n_alive = 0;
+      for(int ky = -1; ky <= 1; ky++) {
+	for(int kx = -1; kx <= 1; kx++) {
+	  if (kx == 0 && ky == 0) continue;
+	  if (ky + y < 0 || kx + x < 0) continue;
+	  if (ky + y > GOL_SIZE || kx + x > GOL_SIZE) continue;
+
+	  if (current[y + ky][x + kx] == 1) {
+	    n_alive++;
 	  }
 	}
       }
-      bool is_alive = gol[i][j] == 1;
+      bool is_alive = current[y][x] == 1;
       if (is_alive) {
-	printf("is alive! %d \n", number_of_live_neightbours);
-	if (number_of_live_neightbours < 2) {
-	  gol[i][j] = 0;
-	  // printf("died 1!\n");
-	} else if (number_of_live_neightbours == 2 || number_of_live_neightbours == 3) {
-	  // printf("keep!\n");
-	  gol[i][j] = 1;
-	} else if (number_of_live_neightbours > 3) {
-	  // printf("died 2!\n");
-	  gol[i][j] = 0;
+	if (n_alive < 2) {
+	  next[y][x] = 0;
+	} else if (n_alive <= 3) {
+	  next[y][x] = 1;
+	} else {
+	  next[y][x] = 0;
 	}
       } else {
-	// printf("is dead! %d \n", number_of_live_neightbours);
-	if (number_of_live_neightbours == 3) {
-	  // printf("pop!\n");
-	  gol[i][j] = 1;
+	if (n_alive == 3) {
+	  next[y][x] = 1;
+	} else {
+	  next[y][x] = 0;
 	}
       }
     }
   }
+}
+
+void print_state(int state[GOL_SIZE][GOL_SIZE]) {
+  printf("STATE \n");
+  for(size_t y = 0; y < GOL_SIZE; y++) {
+    for(size_t x = 0; x < GOL_SIZE; x++) {
+      printf("%zu, ", state[y][x]);
+      
+    }
+    printf("\n");
+  }
+  printf("-----\n");
+}
+
+void clear(int state[GOL_SIZE][GOL_SIZE]) {
+  memset(state, 0, sizeof(int) * GOL_SIZE* GOL_SIZE);
 }
 
 int main(void) {
@@ -91,7 +112,14 @@ int main(void) {
       ClearBackground(BLACK);
       ticks += 1;
       if (ticks == 60) {
-	update_state();
+	print_state(gol);
+	update_state(gol, gol_next);
+	memcpy(gol, gol_next, sizeof(gol_next[0][0]) * GOL_SIZE * GOL_SIZE);
+
+	clear(gol_next);
+	print_state(gol_next);
+	puts("TICK OK");
+
 	ticks = 0;
       }
       render();
