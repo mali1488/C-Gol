@@ -70,7 +70,7 @@ void update_state(int *current, int *next, size_t width, size_t height) {
       }
     }
   }
-  memcpy(current, next, sizeof(next[0])*height*width);
+  memcpy(current, next, sizeof(int) * height * width);
   memset(next, 0, sizeof(int) * height * width);
 }
 
@@ -122,15 +122,16 @@ int main(int argc, char **argv) {
     }
     const char *width_str = shift_args(&argc, &argv);
     const int width = atoi(width_str);
-    
-    int *gol = (int*)malloc(sizeof(int)*width*height);
-    int *next = (int*)malloc(sizeof(int)*width*height);
+
+    size_t board_size = sizeof(int) * width * height;
+    int *gol = (int*)malloc(board_size);
+    int *next = (int*)malloc(board_size);
     int ticks = 0;
 
-    memset(gol, 0, sizeof(int)*width*height);
+    memset(gol, 0, sizeof(int) * width * height);
     randomize(gol, height, width);
 
-    InitWindow(width*CELL_SIZE, height*CELL_SIZE, "Game of Life");
+    InitWindow(width * CELL_SIZE, height * CELL_SIZE, "Game of Life");
     SetTargetFPS(60);
 
     while (!WindowShouldClose()) { 
